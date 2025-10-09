@@ -1,38 +1,30 @@
-/* Estilo personalizado para a checkbox (opcional, mas fica mais bonito) */
+/* --- styles.css --- */
+
+/* Estilo personalizado para a checkbox */
 .custom-checkbox {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%; /* Transforma em círculo */
+    /* ... (Estilos básicos) ... */
     border: 2px solid #9ca3af; /* Cor da borda cinza (gray-400) */
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s;
+}
+/* No Dark Mode, escurece a borda */
+.dark .custom-checkbox {
+    border: 2px solid #4b5563; /* Cor da borda cinza (gray-600) no dark mode */
 }
 
 .custom-checkbox:checked {
     background-color: #10b981; /* Cor de fundo verde (emerald-500) */
-    border-color: #10b981; /* Cor da borda verde */
-    position: relative;
+    border-color: #10b981;
 }
 
-/* Adiciona o "check" (✓) quando marcado */
 .custom-checkbox:checked::after {
-    content: '✓';
-    color: white;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.9rem;
-    line-height: 1;
+    /* ... (Estilos do checkmark) ... */
 }
 
+/* RF04 - Estilo para a tarefa concluída (Com risco) */
 .completed {
-    /* Esta propriedade adiciona o risco sobre o texto */
-    text-decoration: line-through; 
-    /* Esta propriedade deixa a cor mais suave para indicar inatividade */
+    text-decoration: line-through;
     color: #9ca3af; /* Cor do texto cinza (gray-400) */
+}
+/* No Dark Mode, usa uma cor cinza mais clara para o texto riscado */
+.dark .completed {
+    color: #6b7280; /* Cor do texto cinza (gray-500) no dark mode */
 }

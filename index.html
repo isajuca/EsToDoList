@@ -1,67 +1,90 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR" class="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EsToDoList</title>
+    <title>EsToDoList - Responsivo com Tailwind</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        // Configuração do Tailwind para suportar Dark Mode via classe
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 min-h-screen p-4 sm:p-8">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 sm:p-8 transition-colors duration-300">
 
-    <main class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
-        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">EsToDoList</h1>
-
-        <div id="add-task-section" class="flex gap-2 mb-8">
-            <input 
-                type="text"
-                id="task-input"
-                placeholder="Digite uma tarefa..."
-                class="flex-1 p-3 border border-pink-300 rounded-lg focus:ring-4 focus:ring-pink-100 focus:border-pink-500 transition duration-150"
-            >
+    <div class="max-w-3xl mx-auto"> <div class="flex justify-end mb-4">
             <button 
-                id="add-task-button"
-                class="bg-green-500 hover:bg-green-600 text-white font-bold p-3 rounded-lg flex items-center justify-center transition duration-150 shadow-md hover:shadow-lg"
+                id="theme-toggle" 
+                class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-300 shadow-md"
+                aria-label="Alternar Tema"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
             </button>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center">
-            <div class="flex flex-1 w-full sm:w-auto relative">
-                <input
+        <main class="w-full bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl transition-colors duration-300">
+            <h1 class="text-3xl font-bold text-center text-indigo-700 dark:text-indigo-400 mb-6 transition-colors duration-300">EsToDoList</h1>
+
+            <div id="add-task-section" class="flex gap-2 mb-8">
+                <input 
                     type="text"
-                    id="search-input"
-                    placeholder="Pesquise uma tarefa..."
-                    class="w-full p-3 pl-10 border border-blue-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition duration-150"
+                    id="task-input"
+                    placeholder="Digite uma tarefa..."
+                    class="flex-1 p-3 border border-pink-300 dark:border-pink-600 rounded-lg focus:ring-4 focus:ring-pink-100 dark:focus:ring-pink-700/50 focus:border-pink-500 dark:bg-gray-700 dark:text-white transition duration-150"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                </svg>
+                <button 
+                    id="add-task-button"
+                    class="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold p-3 rounded-lg flex items-center justify-center transition duration-150 shadow-md hover:shadow-lg"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
             </div>
-            
-            <div class="relative w-full sm:w-auto">
-                <select 
-                    id="filter-select"
-                    class="block appearance-none w-full bg-white border border-green-300 hover:border-green-500 px-4 py-3 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline cursor-pointer"
-                >
-                    <option value="all">Todas</option>
-                    <option value="pending">Pendentes</option>
-                    <option value="completed">Concluídas</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-green-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center">
+                <div class="flex flex-1 w-full sm:w-auto relative">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Pesquise uma tarefa..."
+                        class="w-full p-3 pl-10 border border-blue-300 dark:border-blue-600 rounded-lg focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-700/50 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition duration-150"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 dark:text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                     </svg>
                 </div>
+                
+                <div class="relative w-full sm:w-auto">
+                    <select 
+                        id="filter-select"
+                        class="block appearance-none w-full border border-green-300 dark:border-green-600 hover:border-green-500 px-4 py-3 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline cursor-pointer bg-white dark:bg-gray-700 dark:text-white transition duration-150"
+                    >
+                        <option value="all">Todas</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="completed">Concluídas</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-green-700 dark:text-green-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <ul id="todo-list" class="space-y-4">
-            </ul>
-    </main>
+            <ul id="todo-list" class="space-y-4">
+                </ul>
+        </main>
+    </div>
     
     <script src="script.js"></script>
 </body>
