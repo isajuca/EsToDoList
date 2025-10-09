@@ -1,0 +1,38 @@
+/* Estilo personalizado para a checkbox (opcional, mas fica mais bonito) */
+.custom-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%; /* Transforma em círculo */
+    border: 2px solid #9ca3af; /* Cor da borda cinza (gray-400) */
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.custom-checkbox:checked {
+    background-color: #10b981; /* Cor de fundo verde (emerald-500) */
+    border-color: #10b981; /* Cor da borda verde */
+    position: relative;
+}
+
+/* Adiciona o "check" (✓) quando marcado */
+.custom-checkbox:checked::after {
+    content: '✓';
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.completed {
+    /* Esta propriedade adiciona o risco sobre o texto */
+    text-decoration: line-through; 
+    /* Esta propriedade deixa a cor mais suave para indicar inatividade */
+    color: #9ca3af; /* Cor do texto cinza (gray-400) */
+}

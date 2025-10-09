@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EsToDoList</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen p-4 sm:p-8">
+
+    <main class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">EsToDoList</h1>
+
+        <div id="add-task-section" class="flex gap-2 mb-8">
+            <input 
+                type="text"
+                id="task-input"
+                placeholder="Digite uma tarefa..."
+                class="flex-1 p-3 border border-pink-300 rounded-lg focus:ring-4 focus:ring-pink-100 focus:border-pink-500 transition duration-150"
+            >
+            <button 
+                id="add-task-button"
+                class="bg-green-500 hover:bg-green-600 text-white font-bold p-3 rounded-lg flex items-center justify-center transition duration-150 shadow-md hover:shadow-lg"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center">
+            <div class="flex flex-1 w-full sm:w-auto relative">
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Pesquise uma tarefa..."
+                    class="w-full p-3 pl-10 border border-blue-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition duration-150"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            
+            <div class="relative w-full sm:w-auto">
+                <select 
+                    id="filter-select"
+                    class="block appearance-none w-full bg-white border border-green-300 hover:border-green-500 px-4 py-3 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline cursor-pointer"
+                >
+                    <option value="all">Todas</option>
+                    <option value="pending">Pendentes</option>
+                    <option value="completed">Concluídas</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <ul id="todo-list" class="space-y-4">
+            </ul>
+    </main>
+    
+    <script src="script.js"></script>
+</body>
+</html>
