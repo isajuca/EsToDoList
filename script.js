@@ -4,19 +4,53 @@ const addTaskButton = document.getElementById('add-task-button');
 const todoList = document.getElementById('todo-list');
 const searchInput = document.getElementById('search-input');
 const filterSelect = document.getElementById('filter-select');
+const themeToggle = document.getElementById('theme-toggle');
+const sunIcon = document.getElementById('sun-icon');
+const moonIcon = document.getElementById('moon-icon');
 
 // --- Variáveis de Estado ---
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+const localStorageTheme = localStorage.getItem('theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-// --- Funções de Estado ---
 
-// Salva as tarefas no Local Storage (Persistência simples)
+// --- Lógica de Tema Escuro (Dark Mode) ---
+const applyTheme = (theme) => {
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+    } else {
+        document.documentElement.classList.remove('dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+    }
+    localStorage.setItem('theme', theme);
+};
+
+const initializeTheme = () => {
+    let initialTheme = 'light';
+    if (localStorageTheme) {
+        initialTheme = localStorageTheme;
+    } else if (prefersDark) {
+        initialTheme = 'dark';
+    }
+    applyTheme(initialTheme);
+};
+
+const toggleTheme = () => {
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+};
+
+// --- Funções de Estado (RFs) ---
+
+// Salva as tarefas no Local Storage
 const saveTasks = () => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 };
-
-// --- Funções de Renderização e Lógica das RFs ---
 
 // Função que renderiza a lista na tela (Inclui RF05 e RF06)
 const renderTasks = () => {
@@ -32,10 +66,10 @@ const renderTasks = () => {
         return matchesSearch && matchesFilter;
     });
 
-    todoList.innerHTML = ''; // Limpa a lista atual
+    todoList.innerHTML = ''; 
 
     if (filteredTasks.length === 0) {
-         todoList.innerHTML = `<li class="text-center text-gray-500 py-4 italic">Nenhuma tarefa encontrada.</li>`;
+         todoList.innerHTML = `<li class="text-center text-gray-500 dark:text-gray-400 py-4 italic transition-colors duration-300">Nenhuma tarefa encontrada.</li>`;
          return;
     }
 
@@ -43,30 +77,33 @@ const renderTasks = () => {
         const listItem = document.createElement('li');
         listItem.dataset.id = task.id;
         
-        // Classes Tailwind para o item da lista
-        listItem.className = 'flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg shadow hover:shadow-md transition duration-200 space-x-2';
+        // Adicionando dark: classes aos itens da lista
+        listItem.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow hover:shadow-md transition duration-200 space-x-2';
 
-        // Conteúdo da tarefa (usa classes CSS e chama funções JS)
         listItem.innerHTML = `
-            
             <div class="flex items-center flex-1 min-w-0">
                 <input type="checkbox" id="task-${task.id}" class="custom-checkbox mr-3" ${task.completed ? 'checked' : ''}>
-                <p class="text-gray-800 break-words flex-1 min-w-0 ${task.completed ? 'line-through opacity-60 text-gray-400' : ''}">${task.text}</p>
-                <input type="text" value="${task.text}" class="hidden flex-1 p-1 border border-indigo-400 rounded mr-2 focus:outline-none" data-edit-input>
+                <p class="${task.completed ? 'line-through opacity-60 text-gray-400 dark:text-gray-300 break-words flex-1 min-w-0' : 'text-gray-800 dark:text-gray-200 break-words flex-1 min-w-0'}">${task.text}</p>
+                <input type="text" value="${task.text}" class="hidden flex-1 p-1 border border-indigo-400 dark:border-indigo-600 rounded mr-2 focus:outline-none dark:bg-gray-600 dark:text-white" data-edit-input>
             </div>
 
             <div class="flex space-x-2 ml-2">
+                
+                ${!task.completed ? `
+                    <div class="flex space-x-2 ml-2">
                 <button class="edit-button text-orange-500 hover:text-orange-700 p-1 rounded transition duration-150" onclick="toggleEdit(${task.id})">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-5.646 7.07l-2.828 2.828-1.414-1.414 2.828-2.828 1.414 1.414zm-4.243 4.243l-1.414 1.414-1.414-1.414 1.414-1.414 1.414 1.414z" />
-                    </svg>
-                </button>
-                <button class="save-button text-blue-500 hover:text-blue-700 p-1 rounded transition duration-150 hidden" onclick="saveEdit(${task.id})">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-                <button class="delete-button text-red-500 hover:text-red-700 p-1 rounded transition duration-150" onclick="deleteTask(${task.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </button>
+                    <button class="save-button text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition duration-150 hidden" onclick="saveEdit(${task.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                ` : ''} 
+                
+                <button class="delete-button text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition duration-150" onclick="deleteTask(${task.id})">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
                     </svg>
@@ -74,9 +111,8 @@ const renderTasks = () => {
             </div>
         `;
 
-
         // Adiciona o manipulador de eventos para o checkbox (RF04)
-        listItem.querySelector(`#task-${task.id}`).addEventListener('change', () => toggleComplete(task.id));
+        listItem.querySelector(`#task-${task.id}`).addEventListener('change', () => window.toggleComplete(task.id));
 
         todoList.appendChild(listItem);
     });
@@ -167,31 +203,17 @@ taskInput.addEventListener('keypress', (e) => {
     }
 });
 
-// RF05
+// RF05 (Pesquisa)
 searchInput.addEventListener('input', renderTasks);
 
-// RF06
+// RF06 (Filtro)
 filterSelect.addEventListener('change', renderTasks);
 
-// Inicializa a aplicação
-document.addEventListener('DOMContentLoaded', renderTasks);
+// Dark Mode Toggle
+themeToggle.addEventListener('click', toggleTheme);
 
-// Dentro do renderTasks, ao montar o listItem:
-listItem.innerHTML = `
-    <div class="flex items-center flex-1 min-w-0">
-        <input type="checkbox" id="task-${task.id}" class="custom-checkbox mr-3" ${task.completed ? 'checked' : ''}>
-        <p class="text-gray-800 break-words flex-1 min-w-0 ${task.completed ? 'completed' : ''}">${task.text}</p> 
-        <input type="text" value="${task.text}" class="hidden flex-1 p-1 border border-indigo-400 rounded mr-2 focus:outline-none" data-edit-input>
-    </div>
-    `;
-// Função que atualiza o estado e redesenha (RF04)
-window.toggleComplete = (id) => {
-    const taskIndex = tasks.findIndex(t => t.id === id);
-    if (taskIndex !== -1) {
-        // 1. Inverte o estado
-        tasks[taskIndex].completed = !tasks[taskIndex].completed;
-        saveTasks();
-        // 2. Redesenha a lista para aplicar o estilo 'completed'
-        renderTasks(); 
-    }
-};
+// Inicializa a aplicação
+document.addEventListener('DOMContentLoaded', () => {
+    initializeTheme();
+    renderTasks();
+});
