@@ -83,7 +83,7 @@ const renderTasks = () => {
         listItem.innerHTML = `
             <div class="flex items-center flex-1 min-w-0">
                 <input type="checkbox" id="task-${task.id}" class="custom-checkbox mr-3" ${task.completed ? 'checked' : ''}>
-                <p class="text-gray-800 dark:text-gray-200 break-words flex-1 min-w-0 ${task.completed ? 'completed' : ''}">${task.text}</p>
+                <p class="${task.completed ? 'line-through opacity-60 text-gray-400 dark:text-gray-300 break-words flex-1 min-w-0' : 'text-gray-800 dark:text-gray-200 break-words flex-1 min-w-0'}">${task.text}</p>
                 <input type="text" value="${task.text}" class="hidden flex-1 p-1 border border-indigo-400 dark:border-indigo-600 rounded mr-2 focus:outline-none dark:bg-gray-600 dark:text-white" data-edit-input>
             </div>
 
@@ -144,7 +144,7 @@ window.toggleComplete = (id) => {
     if (taskIndex !== -1) {
         tasks[taskIndex].completed = !tasks[taskIndex].completed;
         saveTasks();
-        renderTasks(); 
+        renderTasks();
     }
 };
 
