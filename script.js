@@ -1,219 +1,359 @@
-// --- Elementos do DOM ---
-const taskInput = document.getElementById('task-input');
-const addTaskButton = document.getElementById('add-task-button');
-const todoList = document.getElementById('todo-list');
-const searchInput = document.getElementById('search-input');
-const filterSelect = document.getElementById('filter-select');
-const themeToggle = document.getElementById('theme-toggle');
-const sunIcon = document.getElementById('sun-icon');
-const moonIcon = document.getElementById('moon-icon');
 
-// --- Variáveis de Estado ---
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-let nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
-const localStorageTheme = localStorage.getItem('theme');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+// -------------------------------
+// 1. Selecionar os elementos da página (Adaptação de IDs)
+//
+// NOTA: Os seletores são definidos como 'let' para serem atribuídos após o DOM ser carregado.
+// -------------------------------
+let campoNovaTarefa;
+let botaoAdicionar;
+let listaTarefas;
+let campoPesquisa;
+let seletorFiltro;
 
+let botaoTema;
+let iconeSol;
+let iconeLua;
 
-// --- Lógica de Tema Escuro (Dark Mode) ---
-const applyTheme = (theme) => {
-    if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        sunIcon.classList.remove('hidden');
-        moonIcon.classList.add('hidden');
-    } else {
-        document.documentElement.classList.remove('dark');
-        sunIcon.classList.add('hidden');
-        moonIcon.classList.remove('hidden');
+// Array principal que armazenará todas as tarefas
+let tarefas = [];
+
+// -------------------------------
+// 2. Lógica de Persistência (localStorage)
+// -------------------------------
+
+/**
+ * Carrega as tarefas salvas no navegador (localStorage).
+ * Se existirem, popula o array 'tarefas' e exibe na tela.
+ */
+function carregarTarefasSalvas() {
+    const tarefasSalvas = localStorage.getItem('tarefas');
+    if (tarefasSalvas) {
+        tarefas = JSON.parse(tarefasSalvas); // Converte o texto salvo em array de objetos
+        exibirTarefas(tarefas);
     }
-    localStorage.setItem('theme', theme);
-};
+}
 
-const initializeTheme = () => {
-    let initialTheme = 'light';
-    if (localStorageTheme) {
-        initialTheme = localStorageTheme;
-    } else if (prefersDark) {
-        initialTheme = 'dark';
-    }
-    applyTheme(initialTheme);
-};
+/**
+ * Salva o array 'tarefas' atualizado no localStorage.
+ */
+function salvarTarefas() {
+    localStorage.setItem('tarefas', JSON.stringify(tarefas));
+}
 
-const toggleTheme = () => {
-    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    applyTheme(newTheme);
-};
+// -------------------------------
+// 3. Adicionar, Editar e Excluir Tarefas (CRUD)
+// -------------------------------
 
-// --- Funções de Estado (RFs) ---
-
-// Salva as tarefas no Local Storage
-const saveTasks = () => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-};
-
-// Função que renderiza a lista na tela (Inclui RF05 e RF06)
-const renderTasks = () => {
-    const searchText = searchInput.value.toLowerCase();
-    const filterType = filterSelect.value;
+/**
+ * Adiciona uma nova tarefa ao array.
+ */
+function adicionarTarefa() {
+    // Verifica se o campo foi carregado corretamente
+    if (!campoNovaTarefa) return; 
     
-    // Aplica Pesquisa (RF05) e Filtro (RF06)
-    const filteredTasks = tasks.filter(task => {
-        const matchesSearch = task.text.toLowerCase().includes(searchText);
-        const matchesFilter = filterType === 'all' || 
-                              (filterType === 'completed' && task.completed) ||
-                              (filterType === 'pending' && !task.completed);
-        return matchesSearch && matchesFilter;
-    });
+    const texto = campoNovaTarefa.value.trim(); // remove espaços extras
 
-    todoList.innerHTML = ''; 
-
-    if (filteredTasks.length === 0) {
-         todoList.innerHTML = `<li class="text-center text-gray-500 dark:text-gray-400 py-4 italic transition-colors duration-300">Nenhuma tarefa encontrada.</li>`;
-         return;
-    }
-
-    filteredTasks.forEach(task => {
-        const listItem = document.createElement('li');
-        listItem.dataset.id = task.id;
-        
-        // Adicionando dark: classes aos itens da lista
-        listItem.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow hover:shadow-md transition duration-200 space-x-2';
-
-        listItem.innerHTML = `
-            <div class="flex items-center flex-1 min-w-0">
-                <input type="checkbox" id="task-${task.id}" class="custom-checkbox mr-3" ${task.completed ? 'checked' : ''}>
-                <p class="${task.completed ? 'line-through opacity-60 text-gray-400 dark:text-gray-300 break-words flex-1 min-w-0' : 'text-gray-800 dark:text-gray-200 break-words flex-1 min-w-0'}">${task.text}</p>
-                <input type="text" value="${task.text}" class="hidden flex-1 p-1 border border-indigo-400 dark:border-indigo-600 rounded mr-2 focus:outline-none dark:bg-gray-600 dark:text-white" data-edit-input>
-            </div>
-
-            <div class="flex space-x-2 ml-2">
-                
-                ${!task.completed ? `
-                    <div class="flex space-x-2 ml-2">
-                <button class="edit-button text-orange-500 hover:text-orange-700 p-1 rounded transition duration-150" onclick="toggleEdit(${task.id})">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                    </button>
-                    <button class="save-button text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition duration-150 hidden" onclick="saveEdit(${task.id})">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                ` : ''} 
-                
-                <button class="delete-button text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition duration-150" onclick="deleteTask(${task.id})">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-        `;
-
-        // Adiciona o manipulador de eventos para o checkbox (RF04)
-        listItem.querySelector(`#task-${task.id}`).addEventListener('change', () => window.toggleComplete(task.id));
-
-        todoList.appendChild(listItem);
-    });
-};
-
-// RF01 - Adicionar Tarefa
-const addTask = () => {
-    const text = taskInput.value.trim();
-    if (text === "") {
-        alert("Por favor, digite uma tarefa.");
+    if (texto === '') {
+        alert('Por favor, digite uma tarefa!');
         return;
     }
 
-    const newTask = {
-        id: nextId++,
-        text: text,
-        completed: false
+    // Cria um objeto representando a tarefa
+    const novaTarefa = {
+        id: Date.now(), // ID único
+        texto: texto,
+        concluida: false
     };
 
-    tasks.push(newTask);
-    saveTasks();
-    taskInput.value = ''; 
-    renderTasks(); 
-};
-
-// RF04 - Marcar/Desmarcar como Concluída
-window.toggleComplete = (id) => {
-    const taskIndex = tasks.findIndex(t => t.id === id);
-    if (taskIndex !== -1) {
-        tasks[taskIndex].completed = !tasks[taskIndex].completed;
-        saveTasks();
-        renderTasks();
-    }
-};
-
-// RF03 - Excluir Tarefa
-window.deleteTask = (id) => {
-    tasks = tasks.filter(t => t.id !== id);
-    saveTasks();
-    renderTasks();
-};
-
-// RF02 - Iniciar Edição
-window.toggleEdit = (id) => {
-    const listItem = todoList.querySelector(`li[data-id="${id}"]`);
-    const taskText = listItem.querySelector('p');
-    const editInput = listItem.querySelector('[data-edit-input]');
-    const editButton = listItem.querySelector('.edit-button');
-    const saveButton = listItem.querySelector('.save-button');
+    // Adiciona, salva e atualiza a exibição
+    tarefas.push(novaTarefa);
+    salvarTarefas();
     
-    // Alterna a visibilidade
-    taskText.classList.toggle('hidden');
-    editInput.classList.toggle('hidden');
-    editButton.classList.toggle('hidden');
-    saveButton.classList.toggle('hidden');
+    // Filtra e re-exibe a lista para garantir que a pesquisa/filtro ativo seja respeitado
+    filtrarTarefas(); 
+
+    // Limpa o campo de texto
+    campoNovaTarefa.value = '';
+}
+
+/**
+ * Edita o texto de uma tarefa específica pelo ID.
+ * @param {number} id - O ID da tarefa a ser editada.
+ */
+function editarTarefa(id) {
+    const tarefa = tarefas.find(t => t.id === id);
+
+    if (tarefa) {
+        const novaDescricao = prompt('Edite a tarefa:', tarefa.texto);
+
+        if (novaDescricao !== null && novaDescricao.trim() !== '') {
+            tarefa.texto = novaDescricao.trim();
+            salvarTarefas();
+            filtrarTarefas(); // Re-exibe a lista
+        }
+    }
+}
+
+/**
+ * Exclui uma tarefa específica pelo ID.
+ * @param {number} id - O ID da tarefa a ser excluída.
+ */
+function excluirTarefa(id) {
+    const confirmar = window.confirm('Tem certeza que deseja excluir esta tarefa?');
+
+    if (confirmar) {
+        // Filtra e mantém todas as tarefas, exceto a que tem o ID correspondente
+        tarefas = tarefas.filter(tarefa => tarefa.id !== id);
+        salvarTarefas();
+        filtrarTarefas(); // Re-exibe a lista
+    }
+}
+
+// -------------------------------
+// 4. Lógica de Conclusão e Exibição
+// -------------------------------
+
+/**
+ * Alterna o status 'concluida' de uma tarefa.
+ * @param {number} id - O ID da tarefa a ter o status alterado.
+ */
+function alternarConclusao(id) {
+    const tarefa = tarefas.find(t => t.id === id);
+    if (tarefa) {
+        tarefa.concluida = !tarefa.concluida;
+        salvarTarefas();
+        // Usamos a função de filtro para garantir que a lista exibida seja atualizada corretamente
+        // se houver algum filtro ativo (ex: 'Pendentes').
+        filtrarTarefas(); 
+    }
+}
+
+/**
+ * Constrói e exibe a lista de tarefas na UI.
+ * @param {Array<Object>} listaParaMostrar - O array de tarefas (filtradas ou todas) para renderizar.
+ */
+function exibirTarefas(listaParaMostrar) {
+    if (!listaTarefas) return; // Verificação de segurança
+
+    // Limpamos a lista antes de reconstruir
+    listaTarefas.innerHTML = '';
+
+    for (let tarefa of listaParaMostrar) {
+        // Criar elemento <li> (o item da lista)
+        const item = document.createElement('li');
+        item.className = 'flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-600';
+
+        // Estilo de concluída: Adicione a classe 'opacity-60' no item pai
+        if (tarefa.concluida) {
+            item.classList.add('opacity-60'); 
+        }
+
+        // Criar um span para o texto da tarefa
+        const textoContainer = document.createElement('span');
+        textoContainer.textContent = tarefa.texto;
+        textoContainer.className = 'flex-1 cursor-pointer text-gray-800 dark:text-gray-200 break-words pr-4';
+
+        // Estilo de 'line-through'
+        if (tarefa.concluida) {
+            textoContainer.classList.add('line-through', 'text-gray-500', 'dark:text-gray-400');
+        } else {
+            textoContainer.classList.remove('line-through', 'text-gray-500', 'dark:text-gray-400');
+        }
+
+        // Evento de clique para alternar conclusão
+        textoContainer.onclick = function () {
+            alternarConclusao(tarefa.id);
+        };
+
+        // Criar a div para os botões de ação
+        const botoes = document.createElement('div');
+        botoes.className = 'flex space-x-2 flex-shrink-0';
+
+        // Botão Editar
+        const botaoEditar = document.createElement('button');
+        botaoEditar.innerHTML = '✏️';
+        botaoEditar.className = 'p-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg transition duration-150';
+        botaoEditar.onclick = function () {
+            editarTarefa(tarefa.id);
+        };
+
+        // Botão Excluir
+        const botaoExcluir = document.createElement('button');
+        botaoExcluir.innerHTML = '🗑️';
+        botaoExcluir.className = 'p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-150';
+        botaoExcluir.onclick = function () {
+            excluirTarefa(tarefa.id);
+        };
+
+        // Montamos o elemento completo
+        botoes.appendChild(botaoEditar);
+        botoes.appendChild(botaoExcluir);
+        item.appendChild(textoContainer);
+        item.appendChild(botoes);
+        listaTarefas.appendChild(item);
+    }
+}
+
+// -------------------------------
+// 5. Funções de Pesquisa e Filtro
+// -------------------------------
+
+/**
+ * Filtra as tarefas exibidas com base no texto digitado no campo de pesquisa.
+ */
+function pesquisarTarefas() {
+    if (!campoPesquisa) return; // Verificação de segurança
+    const termo = campoPesquisa.value.toLowerCase();
     
-    if (!editInput.classList.contains('hidden')) {
-         editInput.focus();
+    // Obtemos a lista atual que está sendo filtrada pelo status
+    const listaFiltradaPorStatus = aplicarFiltroDeStatus(tarefas);
+
+    // Aplicamos o filtro de pesquisa nessa lista
+    const filtradasPorPesquisa = listaFiltradaPorStatus.filter(tarefa => {
+        return tarefa.texto.toLowerCase().includes(termo);
+    });
+
+    exibirTarefas(filtradasPorPesquisa);
+}
+
+/**
+ * Aplica o filtro de status (all/pending/completed) e retorna a lista.
+ * @param {Array<Object>} tarefasBase - O array base para filtrar.
+ * @returns {Array<Object>} O array filtrado.
+ */
+function aplicarFiltroDeStatus(tarefasBase) {
+    if (!seletorFiltro) return tarefasBase; // Verificação de segurança
+
+    const tipo = seletorFiltro.value; // 'all', 'pending', 'completed' (adaptados)
+    let filtradas = [];
+
+    if (tipo === 'all') {
+        filtradas = tarefasBase;
+    } else if (tipo === 'pending') {
+        filtradas = tarefasBase.filter(tarefa => !tarefa.concluida);
+    } else if (tipo === 'completed') {
+        filtradas = tarefasBase.filter(tarefa => tarefa.concluida);
     }
-};
+    return filtradas;
+}
 
-// RF02 - Salvar Edição
-window.saveEdit = (id) => {
-    const listItem = todoList.querySelector(`li[data-id="${id}"]`);
-    const editInput = listItem.querySelector('[data-edit-input]');
-    const newText = editInput.value.trim();
+/**
+ * Aplica o filtro de status e exibe o resultado na tela.
+ */
+function filtrarTarefas() {
+    // Aplicar o filtro de status
+    const filtradas = aplicarFiltroDeStatus(tarefas);
+    
+    // Além do filtro de status, precisamos aplicar o filtro de pesquisa atual
+    if (campoPesquisa && campoPesquisa.value) {
+        const termoPesquisa = campoPesquisa.value.toLowerCase();
+        const filtradasComPesquisa = filtradas.filter(tarefa => {
+            return tarefa.texto.toLowerCase().includes(termoPesquisa);
+        });
+        exibirTarefas(filtradasComPesquisa);
+    } else {
+        exibirTarefas(filtradas);
+    }
+}
 
-    if (newText === "") {
-        alert("O nome da tarefa não pode ser vazio.");
-        return;
+// -------------------------------
+// 6. Lógica de Dark Mode (Novo Recurso)
+// -------------------------------
+
+/**
+ * Carrega a preferência de tema do usuário (localStorage) e aplica.
+ */
+function carregarTemaSalvo() {
+    if (!iconeSol || !iconeLua) return;
+
+    const temaSalvo = localStorage.getItem('theme');
+    
+    let tema = 'light';
+    if (temaSalvo === 'dark') {
+        tema = 'dark';
+    } else if (temaSalvo === null && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        tema = 'dark';
     }
 
-    const taskIndex = tasks.findIndex(t => t.id === id);
-    if (taskIndex !== -1) {
-        tasks[taskIndex].text = newText;
-        saveTasks();
-        renderTasks(); 
+    if (tema === 'dark') {
+        document.documentElement.classList.add('dark');
+        iconeSol.classList.remove('hidden');
+        iconeLua.classList.add('hidden');
+    } else {
+        document.documentElement.classList.remove('dark');
+        iconeSol.classList.add('hidden');
+        iconeLua.classList.remove('hidden');
     }
-};
+}
 
-// --- Event Listeners (Conectando HTML ao JS) ---
+/**
+ * Alterna entre o modo 'light' e 'dark' e salva a preferência.
+ */
+function alternarTema() {
+    if (!botaoTema) return; // Verificação de segurança
 
-// RF01
-addTaskButton.addEventListener('click', addTask);
-taskInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        addTask();
+    const html = document.documentElement;
+    const isDarkMode = html.classList.toggle('dark');
+
+    if (isDarkMode) {
+        localStorage.setItem('theme', 'dark');
+        iconeSol.classList.remove('hidden');
+        iconeLua.classList.add('hidden');
+    } else {
+        localStorage.setItem('theme', 'light');
+        iconeSol.classList.add('hidden');
+        iconeLua.classList.remove('hidden');
     }
-});
+    // Re-exibimos a lista para garantir que a cor da conclusão seja atualizada
+    filtrarTarefas();
+}
 
-// RF05 (Pesquisa)
-searchInput.addEventListener('input', renderTasks);
+// -------------------------------
+// 7. Eventos e Inicialização (Interações do usuário)
+// -------------------------------
 
-// RF06 (Filtro)
-filterSelect.addEventListener('change', renderTasks);
+/**
+ * Realiza o mapeamento dos elementos do DOM e anexa todos os event listeners.
+ */
+function inicializarElementosEEventos() {
+    // 1. Mapeamento de Elementos (Seguro após o DOM carregar)
+    campoNovaTarefa = document.getElementById('task-input');
+    botaoAdicionar = document.getElementById('add-task-button');
+    listaTarefas = document.getElementById('todo-list');
+    campoPesquisa = document.getElementById('search-input');
+    seletorFiltro = document.getElementById('filter-select');
+    botaoTema = document.getElementById('theme-toggle');
+    iconeSol = document.getElementById('sun-icon');
+    iconeLua = document.getElementById('moon-icon');
 
-// Dark Mode Toggle
-themeToggle.addEventListener('click', toggleTheme);
+    // 2. Anexar Eventos (Verificando se os elementos existem)
+    if (botaoAdicionar) {
+        botaoAdicionar.addEventListener('click', adicionarTarefa);
+    }
+    if (campoNovaTarefa) {
+        campoNovaTarefa.addEventListener('keydown', function (evento) {
+            if (evento.key === 'Enter') {
+                adicionarTarefa();
+            }
+        });
+    }
+    if (campoPesquisa) {
+        campoPesquisa.addEventListener('input', pesquisarTarefas);
+    }
+    if (seletorFiltro) {
+        seletorFiltro.addEventListener('change', filtrarTarefas);
+    }
+    if (botaoTema) {
+        botaoTema.addEventListener('click', alternarTema);
+    }
+    
+    // 3. Inicializar a Aplicação
+    carregarTarefasSalvas();
+    carregarTemaSalvo();
+    // Garante que o filtro e a pesquisa sejam aplicados na inicialização
+    filtrarTarefas(); 
+}
 
-// Inicializa a aplicação
-document.addEventListener('DOMContentLoaded', () => {
-    initializeTheme();
-    renderTasks();
-});
+
+// O evento DOMContentLoaded garante que o script só execute após a estrutura HTML estar pronta.
+document.addEventListener('DOMContentLoaded', inicializarElementosEEventos);
