@@ -15,10 +15,6 @@
     border-color: #10b981;
 }
 
-.custom-checkbox:checked::after {
-    /* ... (Estilos do checkmark) ... */
-}
-
 /* RF04 - Estilo para a tarefa concluída (Com risco) */
 .completed {
     text-decoration: line-through;
